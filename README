@@ -1,0 +1,99 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=2176
+
+The plugin enhances syntax/folding/mappings of the current buffer, converting it to simple yet useful single-file wiki. Name stands for something like "compact wiki".
+
+Screenshot can be downloaded here: http://a-hw.narod.ru/cwiki.png
+
+Features:
+=========================
+
+ * single file storage (readable textual format; built-in VIM encryption can be applied)
+ * unobtrusive wikiwords (no special symbols like brackets)
+ * synonyms (you can define them, so "Bill", "William", and "Mr. W. Smith" point to the same article)
+ * folding (separates articles; shows number of meaningful article lines)
+ * syntax highlighting
+ * visual wikiword selector
+
+Syntax:
+=========================
+
+First level article title: +++ Wiki word
+Second level article title: ++++ Wiki word
+Third level article title: +++++ Wiki word
+
+Level affects folding only, no other side effects.
+
+Optional metadata is expected to be the first non-blank line after the title:
+
+	Synonyms: a, b, {C,c}def
+
+Whitespace before "Synonyms" and after comma is mandatory. Curly braces are expanded like shell patterns, i.e. the line above is equivalent to the following:
+
+	Synonyms: a, b, Cdef, cdef
+
+Actually "Synonyms" is the only metadata currently supported.
+
+Key mappings:
+=========================
+
+n_Ctrl-]: follow wikiword under cursor
+v_Ctrl-]: add new article; currently selected text is used as title
+n_F5: refresh the wiki (you need this if you altered synonyms)
+n_F3: show wikiword selector (current wikiword will be highlighted; move cursor to the desired wikiword and press <CR> to select it, or press <F3> to close the selector)
+
+No other special bindings so far. You can move text around at will. Specifically it is really handy to move whole articles by doing DD and p with folded blocks.
+
+Highlighting groups:
+=========================
+
+ * CWikiTitle1, CWikiTitle2, CWikiTitle3: article titles (linked to Title by default).
+ * CWikiTitleMark: "+" signs in the title (linked to Title by default)
+ * CWikiWord: any detected wikiword (linked to Underlined by default)
+
+Notes:
+=========================
+
+AFAIK on Win32 by default Underlined looks like Normal, so you won't be able to see any wikiwords. The following might help:
+
+	:highlight Underlined gui=underlined
+
+I didn't experience any problems with the plugin yet. But maybe it is a good idea to make backups every now and then (if you do something useful, of course):
+
+	set backup
+	set writebackup
+	au BufWritePre <buffer> let &bex = '-' . strftime("%Y%b%d%X") . '~'
+
+Sample:
+=========================
+
+Here is minimal yet complete sample of the wikifile. Just paste it into new buffer and type :set ft=cwiki (after installing the plugin, of course).
+
+--8<------------------------------
++++ First article
+
+    Synonyms: 1st article, {A,a}rticle #1
+
+Here we have some text. I'd like to mention Mr. W.
+Smith (note that his name is wrapped with <CR>).
+
++++ Mr. W. Smith
+
+    Synonyms: William, Bill, dad
+
+This article is about Mr. W. Smith, also known as
+William, Bill. He has two doughters: Jane and Kim.
+
+Article #1 mentions Bill. Though, that 1st article
+is rather short.
+
+++++ Jane Smith
+
+    Synonyms: Jane
+
+Ms. Jane's dad is Bill.
+
+++++ Kim
+
+Kim is too young, so we refer to her without the last
+name, e.g. no synonyms yet. She loves her dad.
+--8<------------------------------

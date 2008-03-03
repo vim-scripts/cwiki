@@ -1,4 +1,4 @@
-" CWiki 0.1 by Alex Kunin <alexkunin@gmail.com>
+" CWiki 0.1a by Alex Kunin <alexkunin@gmail.com>
 "
 " The plugin enhances syntax/folding/mappings of the current buffer,
 " converting current buffer to simple yet useful single-file wiki.
@@ -112,6 +112,7 @@ function! s:CWiki.init()
     let &l:foldexpr = 'b:cwiki.foldExpr()'
     let &l:foldtext = 'b:cwiki.foldText()'
 
+    nmap <silent> <buffer> <F3> :call b:cwiki.showSelector()<CR>
     nmap <silent> <buffer> <F5> :call b:cwiki.refresh()<CR>
     nmap <silent> <buffer> <C-]> :call b:cwiki.folowTagUnderCursor()<CR>
 	vmap <silent> <buffer> <C-]> :<C-U>call b:cwiki.addTag(<SID>GetLastSelection())<CR>
@@ -321,12 +322,41 @@ function! s:CWiki.refresh()
     call self.setupSyntax()
 endfunction
 
-function! ParseWiki()
-    let &l:backup = 1
-    let &l:writebackup = 1
-    au BufWritePre <buffer> let &bex = '-' . strftime("%Y%b%d%X") . '~'
+function! s:CWiki.showSelector()
+    let i = search('^+++', 'bcnW')
 
-    call s:CWiki.init()
+    if !i
+        let i = search('^+++', 'cnW')
+    endif
+
+    if i
+        let l:tag = s:Tag.parseTitle(getline(i))
+        let l:tags = sort(keys(self.tags))
+        execute 'botright ' . max(map(copy(l:tags), 'strlen(substitute(v:val, ".", "x", "g"))')) . 'vsplit \[CWikiSelector\]'
+        setlocal bufhidden=delete
+        setlocal buftype=nofile
+        setlocal modifiable
+        setlocal noswapfile
+        setlocal nowrap
+        setlocal cursorline
+        call setline(1, l:tags)
+        call cursor(index(l:tags, l:tag) + 1, 1)
+        normal zz
+
+        function! b:Close(n)
+            bdelete!
+            execute a:n . 'wincmd w'
+        endfunction
+
+        function! b:Jump(n)
+            let l:tag = getline('.')
+            call b:Close(a:n)
+            call b:cwiki.jumpToTag(l:tag)
+        endfunction
+
+        execute 'nmap <silent> <buffer> <F3> :call b:Close(' . bufwinnr('#') . ')<CR>'
+        execute 'nmap <silent> <buffer> <CR> :call b:Jump(' . bufwinnr('#') . ')<CR>'
+    endif
 endfunction
 
 call s:CWiki.init()
